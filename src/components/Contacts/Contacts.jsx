@@ -30,7 +30,7 @@ const Contacts = ({ contacts, loading }) => {
               contacts.map((c) => (
                 <Contact
                   key={c.id}
-                  contacts={c}
+                  contact={c}
                 />
               ))
             ) : (

@@ -1,5 +1,6 @@
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 import {
   Navbar,
@@ -13,7 +14,33 @@ import './App.css';
 
 const App = () => {
   const [loading, setLoading] = useState(false);
-  const [contacts, setContacts] = useState([]);
+  const [getContacts, setContacts] = useState([]);
+  const [getGroups,setGroups] = useState([]);
+
+  useEffect(() => {
+   const fetchData = async () => {
+
+    try{
+      setLoading(true);
+
+      const {data : contactsData} = await axios.get("http://localhost:9000/contacts");
+      const {data : groupsData} = await axios.get("http://localhost:9000/groups");
+      setContacts(contactsData);
+      setGroups(groupsData);
+
+      setLoading(false);
+
+    }catch(err){
+      console.log(err.message);
+      setLoading(false);
+    }
+
+   }
+
+   fetchData();
+
+  },[]);
+
 
   return (
     <div className='App'>
@@ -28,7 +55,7 @@ const App = () => {
           path='/contacts'
           element={
             <Contacts
-              contacts={contacts}
+              contacts={getContacts}
               loading={loading}
             />
           }
