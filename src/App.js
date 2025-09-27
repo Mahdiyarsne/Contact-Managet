@@ -1,6 +1,5 @@
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 
 import {
   Navbar,
@@ -10,37 +9,67 @@ import {
   AddContact,
 } from './components/Index';
 
+import {
+  createContact,
+  getAllContacts,
+  getAllGroups,
+} from './services/contactService';
+
 import './App.css';
 
 const App = () => {
   const [loading, setLoading] = useState(false);
   const [getContacts, setContacts] = useState([]);
-  const [getGroups,setGroups] = useState([]);
+  const [getGroups, setGroups] = useState([]);
+  const [getContact, setContact] = useState({
+    fullname: '',
+    photo: '',
+    mobile: '',
+    job: '',
+    email: '',
+    group: '',
+  });
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-   const fetchData = async () => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
 
-    try{
-      setLoading(true);
+        const { data: contactsData } = await getAllContacts();
+        const { data: groupsData } = await getAllGroups();
+        setContacts(contactsData);
+        setGroups(groupsData);
 
-      const {data : contactsData} = await axios.get("http://localhost:9000/contacts");
-      const {data : groupsData} = await axios.get("http://localhost:9000/groups");
-      setContacts(contactsData);
-      setGroups(groupsData);
+        setLoading(false);
+      } catch (err) {
+        console.log(err.message);
+        setLoading(false);
+      }
+    };
 
-      setLoading(false);
+    fetchData();
+  }, []);
 
-    }catch(err){
+  const createContactForm = async (event) => {
+    event.preventDefault();
+
+    try {
+      const [status] = await createContact(getContact);
+
+      if (status === 201) {
+        setContact({});
+        navigate('/contacts');
+      }
+    } catch (err) {
       console.log(err.message);
-      setLoading(false);
     }
+  };
 
-   }
-
-   fetchData();
-
-  },[]);
-
+  const setContactInfo = (event) => {
+    setContact({ ...getContact, [event.target.name]: event.target.value });
+  };
 
   return (
     <div className='App'>
@@ -62,7 +91,15 @@ const App = () => {
         />
         <Route
           path='/contacts/add'
-          element={<AddContact />}
+          element={
+            <AddContact
+              loading={loading}
+              setContactInfo={setContactInfo}
+              contact={getContact}
+              groups={getGroups}
+              createContactForm={createContactForm}
+            />
+          }
         />
         <Route
           path='/contacts/:contactId'
