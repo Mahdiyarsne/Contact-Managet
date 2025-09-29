@@ -3,7 +3,7 @@ import Contact from './Contact';
 import Spinner from '../Spinner';
 import { Link } from 'react-router-dom';
 
-const Contacts = ({ contacts, loading }) => {
+const Contacts = ({ contacts, loading, confirmDelete }) => {
   return (
     <>
       <section className='container'>
@@ -33,6 +33,7 @@ const Contacts = ({ contacts, loading }) => {
                 <Contact
                   key={c.id}
                   contact={c}
+                  confirmDelete={() => confirmDelete(c.id, c.fullname)}
                 />
               ))
             ) : (

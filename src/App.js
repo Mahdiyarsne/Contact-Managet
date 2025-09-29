@@ -1,5 +1,6 @@
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { confirmAlert } from 'react-confirm-alert';
 
 import {
   Navbar,
@@ -13,9 +14,18 @@ import {
   createContact,
   getAllContacts,
   getAllGroups,
+  deleteContact,
 } from './services/contactService';
 
 import './App.css';
+import {
+  COMMENT,
+  CURRENTLINE,
+  FOREGROUND,
+  ORANGE,
+  PURPLE,
+  YELLOW,
+} from './helpers/colors';
 
 const App = () => {
   const [loading, setLoading] = useState(false);
@@ -91,6 +101,58 @@ const App = () => {
     setContact({ ...getContact, [event.target.name]: event.target.value });
   };
 
+  const confirm = (contactId, contactFullname) => {
+    confirmAlert({
+      customUI: ({ onClose }) => {
+        return (
+          <div
+            className='p-4'
+            dir='rtl'
+            style={{
+              backgroundColor: CURRENTLINE,
+              border: `1px solid ${PURPLE}`,
+              borderRadius: '1em',
+            }}>
+            <h1 style={{ color: YELLOW }}> پاک کردن مخاطب </h1>
+            <p style={{ color: FOREGROUND }}>
+              آیا مطمعن هستید که میخواهید مخاطب{contactFullname} را پاک کنید
+            </p>
+            <button
+              onClick={() => {
+                removeContact(contactId);
+                onClose();
+              }}
+              className='btn mx-2 '
+              style={{ backgroundColor: PURPLE }}>
+              مطمعن هستم
+            </button>
+            <button
+              onClick={onClose}
+              className='btn'
+              style={{ backgroundColor: ORANGE }}>
+              انصراف
+            </button>
+          </div>
+        );
+      },
+    });
+  };
+
+  const removeContact = async (contactId) => {
+    try {
+      setLoading(true);
+      const response = await deleteContact(contactId);
+      if (response) {
+        const { data: contactsData } = await getAllContacts();
+        getContacts(contactsData);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.log(err.message);
+      setLoading(false);
+    }
+  };
+
   return (
     <div className='App'>
       <Navbar />
@@ -106,6 +168,7 @@ const App = () => {
             <Contacts
               contacts={getContacts}
               loading={loading}
+              confirmDelete={confirm}
             />
           }
         />
@@ -127,7 +190,12 @@ const App = () => {
         />
         <Route
           path='/contacts/edit/:contactId'
-          element={<EditContact />}
+          element={
+            <EditContact
+              forceRender={forceRender}
+              setForceRender={setForceRender}
+            />
+          }
         />
       </Routes>
     </div>
