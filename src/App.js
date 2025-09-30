@@ -2,34 +2,17 @@ import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { confirmAlert } from 'react-confirm-alert';
 
-import {
-  Navbar,
-  Contacts,
-  EditContact,
-  ViewContact,
-  AddContact,
-} from './components/index';
+import { Navbar, Contacts, EditContact, ViewContact, AddContact } from './components/index';
 
-import {
-  createContact,
-  getAllContacts,
-  getAllGroups,
-  deleteContact,
-} from './services/contactService';
+import { createContact, getAllContacts, getAllGroups, deleteContact } from './services/contactService';
 
 import './App.css';
-import {
-  COMMENT,
-  CURRENTLINE,
-  FOREGROUND,
-  ORANGE,
-  PURPLE,
-  YELLOW,
-} from './helpers/colors';
+import { CURRENTLINE, FOREGROUND, ORANGE, PURPLE, YELLOW } from './helpers/colors';
 
 const App = () => {
   const [loading, setLoading] = useState(false);
   const [getContacts, setContacts] = useState([]);
+  const [getFilteredContacts, setFilteredContacts] = useState([]);
   const [forceRender, setForceRender] = useState(false);
   const [getGroups, setGroups] = useState([]);
   const [getContact, setContact] = useState({
@@ -41,6 +24,8 @@ const App = () => {
     group: '',
   });
 
+  const [query, setQuery] = useState({ text: '' });
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +36,7 @@ const App = () => {
         const { data: contactsData } = await getAllContacts();
         const { data: groupsData } = await getAllGroups();
         setContacts(contactsData);
+        setFilteredContacts(contactsData);
         setGroups(groupsData);
 
         setLoading(false);
@@ -106,13 +92,14 @@ const App = () => {
       customUI: ({ onClose }) => {
         return (
           <div
-            className='p-4'
-            dir='rtl'
+            className="p-4"
+            dir="rtl"
             style={{
               backgroundColor: CURRENTLINE,
               border: `1px solid ${PURPLE}`,
               borderRadius: '1em',
-            }}>
+            }}
+          >
             <h1 style={{ color: YELLOW }}> پاک کردن مخاطب </h1>
             <p style={{ color: FOREGROUND }}>
               آیا مطمعن هستید که میخواهید مخاطب{contactFullname} را پاک کنید
@@ -122,14 +109,12 @@ const App = () => {
                 removeContact(contactId);
                 onClose();
               }}
-              className='btn mx-2 '
-              style={{ backgroundColor: PURPLE }}>
+              className="btn mx-2 "
+              style={{ backgroundColor: PURPLE }}
+            >
               مطمعن هستم
             </button>
-            <button
-              onClick={onClose}
-              className='btn'
-              style={{ backgroundColor: ORANGE }}>
+            <button onClick={onClose} className="btn" style={{ backgroundColor: ORANGE }}>
               انصراف
             </button>
           </div>
@@ -144,7 +129,7 @@ const App = () => {
       const response = await deleteContact(contactId);
       if (response) {
         const { data: contactsData } = await getAllContacts();
-        getContacts(contactsData);
+        setContacts(contactsData);
         setLoading(false);
       }
     } catch (err) {
@@ -153,27 +138,27 @@ const App = () => {
     }
   };
 
+  const contactSearch = (event) => {
+    setQuery({ ...query, text: event.target.value });
+    const allContacts = getContacts.filter((contact) => {
+      return contact.fullname.toLowerCase().includes(event.target.value.toLowerCase());
+    });
+
+    setFilteredContacts(allContacts);
+  };
+
   return (
-    <div className='App'>
-      <Navbar />
+    <div className="App">
+      <Navbar query={query} search={contactSearch} />
 
       <Routes>
+        <Route path="/" element={<Navigate to="/contacts" />} />
         <Route
-          path='/'
-          element={<Navigate to='/contacts' />}
+          path="/contacts"
+          element={<Contacts contacts={getFilteredContacts} loading={loading} confirmDelete={confirm} />}
         />
         <Route
-          path='/contacts'
-          element={
-            <Contacts
-              contacts={getContacts}
-              loading={loading}
-              confirmDelete={confirm}
-            />
-          }
-        />
-        <Route
-          path='/contacts/add'
+          path="/contacts/add"
           element={
             <AddContact
               loading={loading}
@@ -184,18 +169,10 @@ const App = () => {
             />
           }
         />
+        <Route path="/contacts/:contactId" element={<ViewContact />} />
         <Route
-          path='/contacts/:contactId'
-          element={<ViewContact />}
-        />
-        <Route
-          path='/contacts/edit/:contactId'
-          element={
-            <EditContact
-              forceRender={forceRender}
-              setForceRender={setForceRender}
-            />
-          }
+          path="/contacts/edit/:contactId"
+          element={<EditContact forceRender={forceRender} setForceRender={setForceRender} />}
         />
       </Routes>
     </div>

@@ -10,7 +10,7 @@ const Contacts = ({ contacts, loading, confirmDelete }) => {
         <div className='grid'>
           <div className='row'>
             <div className='col'>
-              <p className='h3'>
+              <p className='h3 my-2 float-end'>
                 <Link
                   to={'/contacts/add'}
                   className='btn mx-2'
